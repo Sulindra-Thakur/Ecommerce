@@ -8,6 +8,7 @@ const path = require("path");
 // Load environment variables
 dotenv.config();
 
+// Import routes
 const authRouter = require("./routes/auth/auth-routes");
 const adminProductsRouter = require("./routes/admin/products-routes");
 const adminOrderRouter = require("./routes/admin/order-routes");
@@ -19,16 +20,15 @@ const shopOrderRouter = require("./routes/shop/order-routes");
 const shopSearchRouter = require("./routes/shop/search-routes");
 const shopReviewRouter = require("./routes/shop/review-routes");
 const shopDiscountRouter = require("./routes/shop/discount-routes");
+const shopRecommendationRouter = require("./routes/shop/recommendation-routes");
 
 const commonFeatureRouter = require("./routes/common/feature-routes");
 
-//create a database connection -> u can also
-//create a separate file for this and then import/use that file here
-
+// Connect to MongoDB
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => console.log("MongoDB connected"))
-  .catch((error) => console.log(error));
+  .catch((error) => console.log("MongoDB connection error:", error));
 
 const app = express();
 const PORT = process.env.PORT || 5002;
@@ -40,12 +40,21 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: function(origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if(!origin) return callback(null, true);
+      
+      if(allowedOrigins.indexOf(origin) === -1) {
+        const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
     methods: ["GET", "POST", "DELETE", "PUT"],
     allowedHeaders: [
       "Content-Type",
       "Authorization",
-      "Cache-Control",
+      "Cache-Control", 
       "Expires",
       "Pragma",
     ],
@@ -55,6 +64,13 @@ app.use(
 
 app.use(cookieParser());
 app.use(express.json());
+
+// Server status check endpoint
+app.get('/api/status', (req, res) => {
+  res.status(200).json({ status: 'online', environment: process.env.NODE_ENV });
+});
+
+// API Routes
 app.use("/api/auth", authRouter);
 app.use("/api/admin/products", adminProductsRouter);
 app.use("/api/admin/orders", adminOrderRouter);
@@ -66,23 +82,21 @@ app.use("/api/shop/order", shopOrderRouter);
 app.use("/api/shop/search", shopSearchRouter);
 app.use("/api/shop/review", shopReviewRouter);
 app.use("/api/shop/discount", shopDiscountRouter);
+app.use("/api/shop/recommendation", shopRecommendationRouter);
 
 app.use("/api/common/feature", commonFeatureRouter);
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
-  // Set static folder
+  // Serve static files from the React app
   const clientBuildPath = path.join(__dirname, '../client/dist');
-  console.log(`Serving static files from: ${clientBuildPath}`);
-  
   app.use(express.static(clientBuildPath));
 
-  // Handle React routing, return all requests to React app
+  // Handle React routing, return all non-API requests to React app
   app.get('*', (req, res) => {
-    if (req.url.startsWith('/api')) {
-      return; // Skip for API routes
+    if (!req.path.startsWith('/api/')) {
+      res.sendFile(path.join(clientBuildPath, 'index.html'));
     }
-    res.sendFile(path.join(clientBuildPath, 'index.html'));
   });
 }
 

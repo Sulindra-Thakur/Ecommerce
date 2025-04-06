@@ -22,7 +22,7 @@ const createOrder = async (req, res) => {
     } = req.body;
 
     // Get clientHost dynamically - works for both dev and prod
-    const clientHost = req.headers.origin || 'http://localhost:5174';
+    const clientHost = req.headers.origin || process.env.CLIENT_URL || 'http://localhost:5174';
 
     const create_payment_json = {
       intent: "sale",
@@ -55,7 +55,7 @@ const createOrder = async (req, res) => {
 
     paypal.payment.create(create_payment_json, async (error, paymentInfo) => {
       if (error) {
-        console.log(error);
+        console.log("PayPal payment creation error:", error);
 
         return res.status(500).json({
           success: false,
@@ -91,10 +91,10 @@ const createOrder = async (req, res) => {
       }
     });
   } catch (e) {
-    console.log(e);
+    console.log("Order creation error:", e);
     res.status(500).json({
       success: false,
-      message: "Some error occured!",
+      message: "Some error occurred while creating order",
     });
   }
 };
