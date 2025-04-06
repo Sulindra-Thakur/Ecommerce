@@ -1,0 +1,29 @@
+services:
+  # A web service with Node.js
+  - type: web
+    name: mern-ecommerce-app
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5002
+      - key: JWT_SECRET
+        fromGroup: mern-ecommerce-secrets
+      - key: MONGODB_URI
+        fromGroup: mern-ecommerce-secrets
+      - key: ALLOWED_ORIGINS
+        value: https://mern-ecommerce-app.onrender.com,http://localhost:5173
+
+# Configuration for secret environment variables
+envVarGroups:
+  - name: mern-ecommerce-secrets
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MONGODB_URI
+        # You will need to set this manually in the Render dashboard
+        sync: false 

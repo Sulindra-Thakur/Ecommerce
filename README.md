@@ -93,6 +93,24 @@ The weather-based discount system is implemented using:
 ## License
 MIT 
 
+## Deployment
+
+This project is configured for easy deployment to Render.com. We've prepared detailed deployment instructions in the [DEPLOYMENT.md](./DEPLOYMENT.md) file.
+
+### Quick Deployment Steps
+
+1. Create an account on [Render.com](https://render.com)
+2. Connect your Git repository
+3. Set up a new Web Service with:
+   - Build Command: `npm install && npm run build`
+   - Start Command: `npm start`
+4. Configure the required environment variables
+5. Deploy!
+
+⚠️ **IMPORTANT**: Never commit sensitive information (API keys, database credentials, etc.) to your repository. Use environment variables on Render.com instead.
+
+For detailed instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
+
 ## Deployment Guide
 
 ### Prerequisites

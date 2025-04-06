@@ -26,7 +26,7 @@ const commonFeatureRouter = require("./routes/common/feature-routes");
 //create a separate file for this and then import/use that file here
 
 mongoose
-  .connect(process.env.MONGODB_URI || "mongodb+srv://sonvishalspy:ign9kUJiSimai938@cluster0.cbkxl.mongodb.net/")
+  .connect(process.env.MONGODB_URI)
   .then(() => console.log("MongoDB connected"))
   .catch((error) => console.log(error));
 
@@ -71,12 +71,18 @@ app.use("/api/common/feature", commonFeatureRouter);
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
-  // Serve static files from the React app
-  app.use(express.static(path.join(__dirname, '../client/dist')));
+  // Set static folder
+  const clientBuildPath = path.join(__dirname, '../client/dist');
+  console.log(`Serving static files from: ${clientBuildPath}`);
+  
+  app.use(express.static(clientBuildPath));
 
   // Handle React routing, return all requests to React app
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+    if (req.url.startsWith('/api')) {
+      return; // Skip for API routes
+    }
+    res.sendFile(path.join(clientBuildPath, 'index.html'));
   });
 }
 
