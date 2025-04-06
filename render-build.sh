@@ -13,15 +13,14 @@ npm install
 # Install client dependencies
 echo "Installing client dependencies..."
 cd client
-npm install
-# Ensure we have the correct version of @vitejs/plugin-react
-npm install @vitejs/plugin-react@4.0.0 --save-dev
+npm install --force
 
-# Return to root
+# Go back to root
 cd ..
 
 # Build client
-echo "Building client..."
-npm run build-client
+echo "Building client directly..."
+cd client
+npm run build
 
 echo "Build complete!" 

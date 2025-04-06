@@ -4,7 +4,7 @@ services:
     name: mern-ecommerce-app
     env: node
     plan: free
-    buildCommand: ./render-build.sh
+    buildCommand: npm install && cd client && npm install --legacy-peer-deps && npm run build && cd ..
     startCommand: npm start
     envVars:
       - key: NODE_ENV

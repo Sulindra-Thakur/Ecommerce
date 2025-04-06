@@ -1,0 +1,24 @@
+{
+  "name": "mern-ecommerce-2024-deploy",
+  "version": "1.0.0",
+  "description": "MERN Stack E-commerce Platform - Deployment Package",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "npm run install-all && npm run build-client && npm run start-server",
+    "install-all": "npm install && npm run install-client && npm run install-server",
+    "install-client": "cd client && npm install --no-optional",
+    "install-server": "cd server && npm install",
+    "build-client": "cd client && npm run build",
+    "start-server": "cd server && npm run start",
+    "start": "cd server && npm run start"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+} 
