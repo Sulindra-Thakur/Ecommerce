@@ -17,14 +17,13 @@ services:
       - key: JWT_SECRET
         sync: false
       - key: ALLOWED_ORIGINS
-        fromService:
-          name: mern-ecommerce-frontend
-          type: web
-          property: url
+        value: https://mern-ecommerce-frontend.onrender.com
       - key: PAYPAL_CLIENT_ID
         sync: false
       - key: PAYPAL_CLIENT_SECRET
         sync: false
+      - key: CLIENT_URL
+        value: https://mern-ecommerce-frontend.onrender.com
     healthCheckPath: /api/status
     
   # Frontend service
@@ -37,10 +36,7 @@ services:
     startCommand: cd client && npm run preview
     envVars:
       - key: VITE_API_URL
-        fromService:
-          name: mern-ecommerce-api
-          type: web
-          property: url
+        value: https://mern-ecommerce-api.onrender.com
       - key: VITE_APP_ENV
         value: production
 
