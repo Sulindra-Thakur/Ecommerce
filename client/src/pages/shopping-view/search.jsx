@@ -8,36 +8,59 @@ import {
   getSearchResults,
   resetSearchResults,
 } from "@/store/shop/search-slice";
+import { trackSearchQuery, trackProductView } from "@/store/shop/recommendation-slice";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
+import { useLocation } from "../../contexts/LocationContext";
+import { Loader2 } from "lucide-react";
 
 function SearchProducts() {
   const [keyword, setKeyword] = useState("");
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useDispatch();
-  const { searchResults } = useSelector((state) => state.shopSearch);
+  const { searchResults, isLoading } = useSelector((state) => state.shopSearch);
   const { productDetails } = useSelector((state) => state.shopProducts);
+  const { location: userLocation } = useLocation();
 
   const { user } = useSelector((state) => state.auth);
 
   const { cartItems } = useSelector((state) => state.shopCart);
   const { toast } = useToast();
+  
+  // Get keyword from URL on initial load
   useEffect(() => {
-    if (keyword && keyword.trim() !== "" && keyword.trim().length > 3) {
-      setTimeout(() => {
+    const keywordFromUrl = searchParams.get("keyword");
+    if (keywordFromUrl) {
+      setKeyword(keywordFromUrl);
+      dispatch(getSearchResults(keywordFromUrl));
+    }
+  }, []);
+  
+  useEffect(() => {
+    if (keyword && keyword.trim() !== "" && keyword.trim().length > 2) {
+      const timer = setTimeout(() => {
         setSearchParams(new URLSearchParams(`?keyword=${keyword}`));
         dispatch(getSearchResults(keyword));
-      }, 1000);
-    } else {
-      setSearchParams(new URLSearchParams(`?keyword=${keyword}`));
+        
+        // Track search query for recommendation engine
+        if (user?.id) {
+          dispatch(trackSearchQuery({
+            userId: user.id,
+            query: keyword
+          }));
+        }
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    } else if (keyword.trim() === "") {
+      setSearchParams(new URLSearchParams(``));
       dispatch(resetSearchResults());
     }
-  }, [keyword]);
+  }, [keyword, dispatch, user]);
 
   function handleAddtoCart(getCurrentProductId, getTotalStock) {
-    console.log(cartItems);
     let getCartItems = cartItems.items || [];
 
     if (getCartItems.length) {
@@ -74,15 +97,23 @@ function SearchProducts() {
   }
 
   function handleGetProductDetails(getCurrentProductId) {
-    console.log(getCurrentProductId);
-    dispatch(fetchProductDetails(getCurrentProductId));
+    // Track product view for recommendation engine
+    if (user?.id) {
+      dispatch(trackProductView({
+        userId: user.id,
+        productId: getCurrentProductId
+      }));
+    }
+    
+    dispatch(fetchProductDetails({ 
+      id: getCurrentProductId,
+      locationData: userLocation
+    }));
   }
 
   useEffect(() => {
     if (productDetails !== null) setOpenDetailsDialog(true);
   }, [productDetails]);
-
-  console.log(searchResults, "searchResults");
 
   return (
     <div className="container mx-auto md:px-6 px-4 py-8">
@@ -97,12 +128,24 @@ function SearchProducts() {
           />
         </div>
       </div>
-      {!searchResults.length ? (
-        <h1 className="text-5xl font-extrabold">No result found!</h1>
-      ) : null}
+      
+      {isLoading && (
+        <div className="flex justify-center items-center py-20">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </div>
+      )}
+      
+      {!isLoading && searchResults.length === 0 && keyword.trim() !== "" && (
+        <div className="text-center py-10">
+          <h1 className="text-3xl font-bold mb-2">No results found</h1>
+          <p className="text-muted-foreground">Try a different search term</p>
+        </div>
+      )}
+      
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
         {searchResults.map((item) => (
           <ShoppingProductTile
+            key={item._id}
             handleAddtoCart={handleAddtoCart}
             product={item}
             handleGetProductDetails={handleGetProductDetails}

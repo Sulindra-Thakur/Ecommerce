@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { Button } from "../ui/button";
 import axios from "axios";
 import { Skeleton } from "../ui/skeleton";
+import { buildApiUrl } from "@/lib/api";
 
 function ProductImageUpload({
   imageFile,
@@ -46,17 +47,24 @@ function ProductImageUpload({
   }
 
   async function uploadImageToCloudinary() {
-    setImageLoadingState(true);
-    const data = new FormData();
-    data.append("my_file", imageFile);
-    const response = await axios.post(
-      "http://localhost:5000/api/admin/products/upload-image",
-      data
-    );
-    console.log(response, "response");
-
-    if (response?.data?.success) {
-      setUploadedImageUrl(response.data.result.url);
+    try {
+      setImageLoadingState(true);
+      const data = new FormData();
+      data.append("my_file", imageFile);
+      
+      const response = await axios.post(
+        buildApiUrl("/api/admin/products/upload-image"),
+        data
+      );
+      
+      if (response?.data?.success) {
+        setUploadedImageUrl(response.data.result.url);
+      } else {
+        console.error("Image upload failed:", response.data);
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+    } finally {
       setImageLoadingState(false);
     }
   }
@@ -84,6 +92,7 @@ function ProductImageUpload({
           ref={inputRef}
           onChange={handleImageFileChange}
           disabled={isEditMode}
+          accept="image/*"
         />
         {!imageFile ? (
           <Label
@@ -96,25 +105,39 @@ function ProductImageUpload({
             <span>Drag & drop or click to upload image</span>
           </Label>
         ) : imageLoadingState ? (
-          <Skeleton className="h-10 bg-gray-100" />
+          <div className="flex flex-col items-center space-y-2">
+            <Skeleton className="h-10 w-full bg-gray-100" />
+            <span className="text-sm text-muted-foreground">Uploading image...</span>
+          </div>
         ) : (
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <FileIcon className="w-8 text-primary mr-2 h-8" />
             </div>
             <p className="text-sm font-medium">{imageFile.name}</p>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:text-foreground"
-              onClick={handleRemoveImage}
-            >
-              <XIcon className="w-4 h-4" />
-              <span className="sr-only">Remove File</span>
-            </Button>
+            {!isEditMode && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={handleRemoveImage}
+              >
+                <XIcon className="w-4 h-4" />
+                <span className="sr-only">Remove File</span>
+              </Button>
+            )}
           </div>
         )}
       </div>
+      {uploadedImageUrl && (
+        <div className="mt-4">
+          <img 
+            src={uploadedImageUrl} 
+            alt="Uploaded product" 
+            className="max-h-40 rounded-md mx-auto" 
+          />
+        </div>
+      )}
     </div>
   );
 }

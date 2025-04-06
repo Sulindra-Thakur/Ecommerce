@@ -11,6 +11,16 @@ const ProductSchema = new mongoose.Schema(
     salePrice: Number,
     totalStock: Number,
     averageReview: Number,
+    seasonal: {
+      type: String,
+      enum: ["summer", "rainy", "winter", "all"],
+      default: "all"
+    },
+    tags: [String],
+    weatherDiscountEligible: {
+      type: Boolean,
+      default: true
+    }
   },
   { timestamps: true }
 );

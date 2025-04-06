@@ -3,6 +3,7 @@ import { Button } from "../ui/button";
 import { useDispatch, useSelector } from "react-redux";
 import { deleteCartItem, updateCartQuantity } from "@/store/shop/cart-slice";
 import { useToast } from "../ui/use-toast";
+import { Badge } from "../ui/badge";
 
 function UserCartItemsContent({ cartItem }) {
   const { user } = useSelector((state) => state.auth);
@@ -10,6 +11,16 @@ function UserCartItemsContent({ cartItem }) {
   const { productList } = useSelector((state) => state.shopProducts);
   const dispatch = useDispatch();
   const { toast } = useToast();
+
+  // Check if product has weather discount
+  const hasWeatherDiscount = cartItem?.weatherDiscount && cartItem?.weatherDiscount.percentage > 0;
+  
+  // Calculate final price with all discounts
+  const finalPrice = hasWeatherDiscount ? cartItem?.weatherDiscountedPrice : 
+                     (cartItem?.salePrice > 0 ? cartItem?.salePrice : cartItem?.price);
+  
+  // Calculate total price
+  const totalPrice = (finalPrice * cartItem?.quantity).toFixed(2);
 
   function handleUpdateQuantity(getCartItem, typeOfAction) {
     if (typeOfAction == "plus") {
@@ -73,11 +84,18 @@ function UserCartItemsContent({ cartItem }) {
 
   return (
     <div className="flex items-center space-x-4">
-      <img
-        src={cartItem?.image}
-        alt={cartItem?.title}
-        className="w-20 h-20 rounded object-cover"
-      />
+      <div className="relative">
+        <img
+          src={cartItem?.image}
+          alt={cartItem?.title}
+          className="w-20 h-20 rounded object-cover"
+        />
+        {hasWeatherDiscount && (
+          <Badge className="absolute -top-2 -right-2 bg-blue-500 hover:bg-blue-600 text-[10px]">
+            {cartItem.weatherDiscount.percentage}% OFF
+          </Badge>
+        )}
+      </div>
       <div className="flex-1">
         <h3 className="font-extrabold">{cartItem?.title}</h3>
         <div className="flex items-center gap-2 mt-1">
@@ -102,14 +120,20 @@ function UserCartItemsContent({ cartItem }) {
             <span className="sr-only">Decrease</span>
           </Button>
         </div>
+        {hasWeatherDiscount && (
+          <div className="text-xs text-blue-500 mt-1">
+            {cartItem.weatherDiscount.reason}
+          </div>
+        )}
       </div>
       <div className="flex flex-col items-end">
+        {hasWeatherDiscount && (
+          <p className="text-sm line-through text-gray-500">
+            ${(cartItem?.price * cartItem?.quantity).toFixed(2)}
+          </p>
+        )}
         <p className="font-semibold">
-          $
-          {(
-            (cartItem?.salePrice > 0 ? cartItem?.salePrice : cartItem?.price) *
-            cartItem?.quantity
-          ).toFixed(2)}
+          ${totalPrice}
         </p>
         <Trash
           onClick={() => handleCartItemDelete(cartItem)}

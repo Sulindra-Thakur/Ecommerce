@@ -25,19 +25,19 @@ function ShoppingOrders() {
   const { user } = useSelector((state) => state.auth);
   const { orderList, orderDetails } = useSelector((state) => state.shopOrder);
 
-  function handleFetchOrderDetails(getId) {
-    dispatch(getOrderDetails(getId));
+  function handleFetchOrderDetails(orderId) {
+    dispatch(getOrderDetails(orderId));
   }
 
   useEffect(() => {
     dispatch(getAllOrdersByUserId(user?.id));
-  }, [dispatch]);
+  }, [dispatch, user?.id]);
 
   useEffect(() => {
     if (orderDetails !== null) setOpenDetailsDialog(true);
   }, [orderDetails]);
 
-  console.log(orderDetails, "orderDetails");
+  console.log(orderList, "orderList");
 
   return (
     <Card>
@@ -60,17 +60,17 @@ function ShoppingOrders() {
           <TableBody>
             {orderList && orderList.length > 0
               ? orderList.map((orderItem) => (
-                  <TableRow>
+                  <TableRow key={orderItem._id}>
                     <TableCell>{orderItem?._id}</TableCell>
                     <TableCell>{orderItem?.orderDate.split("T")[0]}</TableCell>
                     <TableCell>
                       <Badge
                         className={`py-1 px-3 ${
                           orderItem?.orderStatus === "confirmed"
-                            ? "bg-green-500"
+                            ? "bg-green-500 text-white"
                             : orderItem?.orderStatus === "rejected"
-                            ? "bg-red-600"
-                            : "bg-black"
+                            ? "bg-red-600 text-white"
+                            : "bg-black text-white"
                         }`}
                       >
                         {orderItem?.orderStatus}
@@ -89,6 +89,7 @@ function ShoppingOrders() {
                           onClick={() =>
                             handleFetchOrderDetails(orderItem?._id)
                           }
+                          className="mt-2 bg-black text-white py-2 rounded-md font-medium hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           View Details
                         </Button>

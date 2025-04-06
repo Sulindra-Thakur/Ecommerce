@@ -33,32 +33,63 @@ const addProduct = async (req, res) => {
       salePrice,
       totalStock,
       averageReview,
+      seasonal,
+      tags,
+      weatherDiscountEligible,
     } = req.body;
 
-    console.log(averageReview, "averageReview");
+    // Process tags if provided as a string
+    let processedTags = [];
+    if (tags) {
+      if (typeof tags === 'string') {
+        processedTags = tags.split(',').map(tag => tag.trim().toLowerCase());
+      } else if (Array.isArray(tags)) {
+        processedTags = tags.map(tag => tag.trim().toLowerCase());
+      }
+    }
 
+    // Automatically add the category and brand as tags if not already included
+    if (category && !processedTags.includes(category.toLowerCase())) {
+      processedTags.push(category.toLowerCase());
+    }
+    
+    if (brand && !processedTags.includes(brand.toLowerCase())) {
+      processedTags.push(brand.toLowerCase());
+    }
+    
+    if (seasonal && seasonal !== 'all' && !processedTags.includes(seasonal.toLowerCase())) {
+      processedTags.push(seasonal.toLowerCase());
+    }
+
+    // Create the product with processed data
     const newlyCreatedProduct = new Product({
       image,
       title,
       description,
-      category,
-      brand,
-      price,
-      salePrice,
-      totalStock,
-      averageReview,
+      category: category.toLowerCase(),
+      brand: brand.toLowerCase(),
+      price: parseFloat(price) || 0,
+      salePrice: parseFloat(salePrice) || 0,
+      totalStock: parseInt(totalStock) || 0,
+      averageReview: parseFloat(averageReview) || 0,
+      seasonal: seasonal ? seasonal.toLowerCase() : 'all',
+      tags: processedTags,
+      weatherDiscountEligible: weatherDiscountEligible !== undefined ? weatherDiscountEligible : true,
     });
 
+    console.log("Creating new product:", newlyCreatedProduct);
     await newlyCreatedProduct.save();
+    
     res.status(201).json({
       success: true,
       data: newlyCreatedProduct,
     });
   } catch (e) {
-    console.log(e);
+    console.log("Error adding product:", e);
     res.status(500).json({
       success: false,
-      message: "Error occured",
+      message: "Error occurred while adding product",
+      error: e.message
     });
   }
 };
@@ -95,6 +126,9 @@ const editProduct = async (req, res) => {
       salePrice,
       totalStock,
       averageReview,
+      seasonal,
+      tags,
+      weatherDiscountEligible,
     } = req.body;
 
     let findProduct = await Product.findById(id);
@@ -104,16 +138,42 @@ const editProduct = async (req, res) => {
         message: "Product not found",
       });
 
+    // Process tags if provided
+    let processedTags = findProduct.tags || [];
+    if (tags) {
+      if (typeof tags === 'string') {
+        processedTags = tags.split(',').map(tag => tag.trim().toLowerCase());
+      } else if (Array.isArray(tags)) {
+        processedTags = tags.map(tag => tag.trim().toLowerCase());
+      }
+      
+      // Ensure category and brand are included in tags
+      if (category && !processedTags.includes(category.toLowerCase())) {
+        processedTags.push(category.toLowerCase());
+      }
+      
+      if (brand && !processedTags.includes(brand.toLowerCase())) {
+        processedTags.push(brand.toLowerCase());
+      }
+      
+      if (seasonal && seasonal !== 'all' && !processedTags.includes(seasonal.toLowerCase())) {
+        processedTags.push(seasonal.toLowerCase());
+      }
+    }
+
+    // Update product fields
     findProduct.title = title || findProduct.title;
     findProduct.description = description || findProduct.description;
-    findProduct.category = category || findProduct.category;
-    findProduct.brand = brand || findProduct.brand;
-    findProduct.price = price === "" ? 0 : price || findProduct.price;
-    findProduct.salePrice =
-      salePrice === "" ? 0 : salePrice || findProduct.salePrice;
-    findProduct.totalStock = totalStock || findProduct.totalStock;
+    findProduct.category = category ? category.toLowerCase() : findProduct.category;
+    findProduct.brand = brand ? brand.toLowerCase() : findProduct.brand;
+    findProduct.price = price !== undefined ? parseFloat(price) : findProduct.price;
+    findProduct.salePrice = salePrice !== undefined ? parseFloat(salePrice) : findProduct.salePrice;
+    findProduct.totalStock = totalStock !== undefined ? parseInt(totalStock) : findProduct.totalStock;
     findProduct.image = image || findProduct.image;
-    findProduct.averageReview = averageReview || findProduct.averageReview;
+    findProduct.averageReview = averageReview !== undefined ? parseFloat(averageReview) : findProduct.averageReview;
+    findProduct.seasonal = seasonal ? seasonal.toLowerCase() : findProduct.seasonal;
+    findProduct.tags = processedTags;
+    findProduct.weatherDiscountEligible = weatherDiscountEligible !== undefined ? weatherDiscountEligible : findProduct.weatherDiscountEligible;
 
     await findProduct.save();
     res.status(200).json({
@@ -121,10 +181,11 @@ const editProduct = async (req, res) => {
       data: findProduct,
     });
   } catch (e) {
-    console.log(e);
+    console.log("Error editing product:", e);
     res.status(500).json({
       success: false,
-      message: "Error occured",
+      message: "Error occurred while editing product",
+      error: e.message
     });
   }
 };

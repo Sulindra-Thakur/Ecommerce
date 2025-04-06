@@ -42,63 +42,90 @@ export const loginFormControls = [
 export const addProductFormElements = [
   {
     label: "Title",
-    name: "title",
-    componentType: "input",
+    id: "title",
+    component: "input",
     type: "text",
     placeholder: "Enter product title",
   },
   {
     label: "Description",
-    name: "description",
-    componentType: "textarea",
+    id: "description",
+    component: "textarea",
     placeholder: "Enter product description",
   },
   {
     label: "Category",
-    name: "category",
-    componentType: "select",
+    id: "category",
+    component: "select",
+    placeholder: "Select category",
     options: [
-      { id: "men", label: "Men" },
-      { id: "women", label: "Women" },
-      { id: "kids", label: "Kids" },
-      { id: "accessories", label: "Accessories" },
-      { id: "footwear", label: "Footwear" },
+      { value: "men", label: "Men" },
+      { value: "women", label: "Women" },
+      { value: "kids", label: "Kids" },
+      { value: "accessories", label: "Accessories" },
+      { value: "footwear", label: "Footwear" }
     ],
   },
   {
-    label: "Brand",
-    name: "brand",
-    componentType: "select",
+    label: "Seasonal Type",
+    id: "seasonal",
+    component: "select",
+    placeholder: "Select seasonal type",
     options: [
-      { id: "nike", label: "Nike" },
-      { id: "adidas", label: "Adidas" },
-      { id: "puma", label: "Puma" },
-      { id: "levi", label: "Levi's" },
-      { id: "zara", label: "Zara" },
-      { id: "h&m", label: "H&M" },
+      { value: "all", label: "All Seasons" },
+      { value: "summer", label: "Summer" },
+      { value: "rainy", label: "Rainy" },
+      { value: "winter", label: "Winter" },
+    ],
+  },
+  {
+    label: "Tags (comma separated)",
+    id: "tags",
+    component: "input",
+    type: "text",
+    placeholder: "E.g., summer, cotton, lightweight",
+  },
+  {
+    label: "Brand",
+    id: "brand",
+    component: "select",
+    placeholder: "Select brand",
+    options: [
+      { value: "nike", label: "Nike" },
+      { value: "adidas", label: "Adidas" },
+      { value: "puma", label: "Puma" },
+      { value: "levi", label: "Levi's" },
+      { value: "zara", label: "Zara" },
+      { value: "h&m", label: "H&M" },
     ],
   },
   {
     label: "Price",
-    name: "price",
-    componentType: "input",
+    id: "price",
+    component: "input",
     type: "number",
     placeholder: "Enter product price",
   },
   {
     label: "Sale Price",
-    name: "salePrice",
-    componentType: "input",
+    id: "salePrice",
+    component: "input",
     type: "number",
     placeholder: "Enter sale price (optional)",
   },
   {
     label: "Total Stock",
-    name: "totalStock",
-    componentType: "input",
+    id: "totalStock",
+    component: "input",
     type: "number",
     placeholder: "Enter total stock",
   },
+  {
+    label: "Weather Discount Eligible",
+    id: "weatherDiscountEligible",
+    component: "checkbox",
+    description: "Can this product receive weather-based discounts?"
+  }
 ];
 
 export const shoppingViewHeaderMenuItems = [
@@ -149,7 +176,7 @@ export const categoryOptionsMap = {
   women: "Women",
   kids: "Kids",
   accessories: "Accessories",
-  footwear: "Footwear",
+  footwear: "Footwear"
 };
 
 export const brandOptionsMap = {
@@ -167,7 +194,13 @@ export const filterOptions = {
     { id: "women", label: "Women" },
     { id: "kids", label: "Kids" },
     { id: "accessories", label: "Accessories" },
-    { id: "footwear", label: "Footwear" },
+    { id: "footwear", label: "Footwear" }
+  ],
+  seasonal: [
+    { id: "summer", label: "Summer" },
+    { id: "rainy", label: "Rainy" },
+    { id: "winter", label: "Winter" },
+    { id: "all", label: "All Seasons" }
   ],
   brand: [
     { id: "nike", label: "Nike" },
@@ -175,8 +208,20 @@ export const filterOptions = {
     { id: "puma", label: "Puma" },
     { id: "levi", label: "Levi's" },
     { id: "zara", label: "Zara" },
-    { id: "h&m", label: "H&M" },
+    { id: "h&m", label: "H&M" }
   ],
+  tags: [
+    { id: "men", label: "Men" },
+    { id: "women", label: "Women" },
+    { id: "kids", label: "Kids" },
+    { id: "summer", label: "Summer" },
+    { id: "winter", label: "Winter" },
+    { id: "rainy", label: "Rainy" },
+    { id: "accessories", label: "Accessories" }
+  ],
+  weatherDiscountEligible: [
+    { id: "true", label: "Weather Discounts Available" }
+  ]
 };
 
 export const sortOptions = [

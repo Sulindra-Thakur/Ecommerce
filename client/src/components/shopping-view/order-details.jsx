@@ -1,81 +1,127 @@
 import { useSelector } from "react-redux";
 import { Badge } from "../ui/badge";
 import { DialogContent } from "../ui/dialog";
-import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
+import { format } from "date-fns";
 
 function ShoppingOrderDetailsView({ orderDetails }) {
   const { user } = useSelector((state) => state.auth);
 
+  const formatDate = (dateString) => {
+    try {
+      return format(new Date(dateString), "MMM dd, yyyy");
+    } catch {
+      return dateString?.split("T")[0] || "";
+    }
+  };
+
   return (
-    <DialogContent className="sm:max-w-[600px]">
-      <div className="grid gap-6">
-        <div className="grid gap-2">
-          <div className="flex mt-6 items-center justify-between">
-            <p className="font-medium">Order ID</p>
-            <Label>{orderDetails?._id}</Label>
-          </div>
-          <div className="flex mt-2 items-center justify-between">
-            <p className="font-medium">Order Date</p>
-            <Label>{orderDetails?.orderDate.split("T")[0]}</Label>
-          </div>
-          <div className="flex mt-2 items-center justify-between">
-            <p className="font-medium">Order Price</p>
-            <Label>${orderDetails?.totalAmount}</Label>
-          </div>
-          <div className="flex mt-2 items-center justify-between">
-            <p className="font-medium">Payment method</p>
-            <Label>{orderDetails?.paymentMethod}</Label>
-          </div>
-          <div className="flex mt-2 items-center justify-between">
-            <p className="font-medium">Payment Status</p>
-            <Label>{orderDetails?.paymentStatus}</Label>
-          </div>
-          <div className="flex mt-2 items-center justify-between">
-            <p className="font-medium">Order Status</p>
-            <Label>
+    <DialogContent className="bg-white max-w-[95vw] sm:max-w-[650px] max-h-[70vh] overflow-y-auto p-4 rounded-lg">
+      <div className="grid gap-6 p-6">
+        {/* Order Summary Section */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Order Summary</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500">Order ID</p>
+              <p className="font-medium">{orderDetails?._id}</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500">Order Date</p>
+              <p className="font-medium">{formatDate(orderDetails?.orderDate)}</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500">Total Amount</p>
+              <p className="font-medium">${orderDetails?.totalAmount?.toFixed(2)}</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500">Payment Method</p>
+              <p className="font-medium capitalize">{orderDetails?.paymentMethod}</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500">Payment Status</p>
               <Badge
-                className={`py-1 px-3 ${
+                variant={
+                  orderDetails?.paymentStatus === "paid" 
+                    ? "success" 
+                    : "default"
+                }
+                className="capitalize text-sm font-semibold px-3 py-1"
+              >
+                {orderDetails?.paymentStatus}
+              </Badge>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500">Order Status</p>
+              <Badge
+                variant={
                   orderDetails?.orderStatus === "confirmed"
-                    ? "bg-green-500"
+                    ? "success"
                     : orderDetails?.orderStatus === "rejected"
-                    ? "bg-red-600"
-                    : "bg-black"
-                }`}
+                    ? "destructive"
+                    : "default"
+                }
+                className="capitalize text-sm font-semibold px-3 py-1"
               >
                 {orderDetails?.orderStatus}
               </Badge>
-            </Label>
-          </div>
-        </div>
-        <Separator />
-        <div className="grid gap-4">
-          <div className="grid gap-2">
-            <div className="font-medium">Order Details</div>
-            <ul className="grid gap-3">
-              {orderDetails?.cartItems && orderDetails?.cartItems.length > 0
-                ? orderDetails?.cartItems.map((item) => (
-                    <li className="flex items-center justify-between">
-                      <span>Title: {item.title}</span>
-                      <span>Quantity: {item.quantity}</span>
-                      <span>Price: ${item.price}</span>
-                    </li>
-                  ))
-                : null}
-            </ul>
-          </div>
-        </div>
-        <div className="grid gap-4">
-          <div className="grid gap-2">
-            <div className="font-medium">Shipping Info</div>
-            <div className="grid gap-0.5 text-muted-foreground">
-              <span>{user.userName}</span>
-              <span>{orderDetails?.addressInfo?.address}</span>
-              <span>{orderDetails?.addressInfo?.city}</span>
-              <span>{orderDetails?.addressInfo?.pincode}</span>
-              <span>{orderDetails?.addressInfo?.phone}</span>
-              <span>{orderDetails?.addressInfo?.notes}</span>
             </div>
+          </div>
+        </div>
+
+        <Separator className="my-2" />
+
+        {/* Order Items Section */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Order Items</h3>
+          <div className="space-y-3">
+            {orderDetails?.cartItems?.length > 0 ? (
+              orderDetails.cartItems.map((item) => (
+                <div 
+                  key={item._id} 
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
+                  <div className="flex-1">
+                    <p className="font-medium">{item.title}</p>
+                  </div>
+                  <div className="flex items-center gap-6">
+                    <p className="text-gray-600">Qty: {item.quantity}</p>
+                    <p className="font-medium">${Number(item.price || 0).toFixed(2)}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500">No items found</p>
+            )}
+          </div>
+        </div>
+
+        <Separator className="my-2" />
+
+        {/* Shipping Information Section */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Shipping Information</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500">Name</p>
+              <p className="font-medium">{user?.userName}</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500">Phone</p>
+              <p className="font-medium">{orderDetails?.addressInfo?.phone}</p>
+            </div>
+            <div className="col-span-2 space-y-2">
+              <p className="text-sm text-gray-500">Address</p>
+              <p className="font-medium">
+                {orderDetails?.addressInfo?.address}, {orderDetails?.addressInfo?.city}, {orderDetails?.addressInfo?.pincode}
+              </p>
+            </div>
+            {orderDetails?.addressInfo?.notes && (
+              <div className="col-span-2 space-y-2">
+                <p className="text-sm text-gray-500">Delivery Notes</p>
+                <p className="font-medium">{orderDetails.addressInfo.notes}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

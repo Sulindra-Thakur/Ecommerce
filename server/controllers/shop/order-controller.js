@@ -2,6 +2,7 @@ const paypal = require("../../helpers/paypal");
 const Order = require("../../models/Order");
 const Cart = require("../../models/Cart");
 const Product = require("../../models/Product");
+const UserHistory = require("../../models/UserHistory");
 
 const createOrder = async (req, res) => {
   try {
@@ -20,14 +21,17 @@ const createOrder = async (req, res) => {
       cartId,
     } = req.body;
 
+    // Get clientHost dynamically - works for both dev and prod
+    const clientHost = req.headers.origin || 'http://localhost:5174';
+
     const create_payment_json = {
       intent: "sale",
       payer: {
         payment_method: "paypal",
       },
       redirect_urls: {
-        return_url: "http://localhost:5173/shop/paypal-return",
-        cancel_url: "http://localhost:5173/shop/paypal-cancel",
+        return_url: `${clientHost}/shop/paypal-return`,
+        cancel_url: `${clientHost}/shop/paypal-cancel`,
       },
       transactions: [
         {
@@ -113,6 +117,7 @@ const capturePayment = async (req, res) => {
     order.paymentId = paymentId;
     order.payerId = payerId;
 
+    // Update product stock
     for (let item of order.cartItems) {
       let product = await Product.findById(item.productId);
 
@@ -124,10 +129,79 @@ const capturePayment = async (req, res) => {
       }
 
       product.totalStock -= item.quantity;
-
       await product.save();
     }
 
+    // Update user purchase history for recommendation system
+    try {
+      const userId = order.userId;
+      if (userId) {
+        // Find or create user history
+        let userHistory = await UserHistory.findOne({ userId });
+        
+        if (!userHistory) {
+          userHistory = new UserHistory({
+            userId,
+            viewedProducts: [],
+            purchasedProducts: [],
+            searchQueries: [],
+          });
+        }
+        
+        // Update purchase history for each product
+        for (let item of order.cartItems) {
+          const productId = item.productId;
+          const product = await Product.findById(productId);
+          
+          if (product) {
+            // Update purchased products list
+            const existingProductIndex = userHistory.purchasedProducts.findIndex(
+              (p) => p.productId === productId
+            );
+            
+            if (existingProductIndex !== -1) {
+              // Product already in purchase history, update count and timestamp
+              userHistory.purchasedProducts[existingProductIndex].purchaseCount += item.quantity;
+              userHistory.purchasedProducts[existingProductIndex].lastPurchasedAt = new Date();
+            } else {
+              // Add new product to purchase history
+              userHistory.purchasedProducts.push({
+                productId,
+                purchaseCount: item.quantity,
+                lastPurchasedAt: new Date(),
+              });
+            }
+            
+            // Update category preferences (stronger weight for purchases)
+            if (product.category) {
+              const category = product.category.toLowerCase();
+              if (userHistory.categoryPreferences[category] !== undefined) {
+                // Give purchases 3x the weight of views
+                userHistory.categoryPreferences[category] += (3 * item.quantity);
+              }
+            }
+            
+            // Update seasonal preferences (stronger weight for purchases)
+            if (product.seasonal && product.seasonal !== 'all') {
+              const season = product.seasonal.toLowerCase();
+              if (userHistory.seasonalPreferences[season] !== undefined) {
+                // Give purchases 3x the weight of views
+                userHistory.seasonalPreferences[season] += (3 * item.quantity);
+              }
+            }
+          }
+        }
+        
+        // Save user history
+        await userHistory.save();
+        console.log("Updated purchase history for recommendations");
+      }
+    } catch (historyError) {
+      // Don't fail the order if history update fails
+      console.error("Error updating purchase history:", historyError);
+    }
+
+    // Delete the cart
     const getCartId = order.cartId;
     await Cart.findByIdAndDelete(getCartId);
 

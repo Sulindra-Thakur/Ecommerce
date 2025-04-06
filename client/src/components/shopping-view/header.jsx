@@ -1,4 +1,4 @@
-import { HousePlug, LogOut, Menu, ShoppingCart, UserCog } from "lucide-react";
+import { HousePlug, LogOut, Menu, ShoppingCart, UserCog, Sparkles } from "lucide-react";
 import {
   Link,
   useLocation,
@@ -28,25 +28,35 @@ function MenuItems() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const dispatch = useDispatch();
 
   function handleNavigate(getCurrentMenuItem) {
     sessionStorage.removeItem("filters");
-    const currentFilter =
-      getCurrentMenuItem.id !== "home" &&
-      getCurrentMenuItem.id !== "products" &&
-      getCurrentMenuItem.id !== "search"
-        ? {
-            category: [getCurrentMenuItem.id],
-          }
-        : null;
-
+    
+    // Special handling for "search" menu item
+    if (getCurrentMenuItem.id === "search") {
+      navigate(getCurrentMenuItem.path);
+      return;
+    }
+    
+    // Special handling for "home" and "products" menu items
+    if (getCurrentMenuItem.id === "home" || getCurrentMenuItem.id === "products") {
+      navigate(getCurrentMenuItem.path);
+      return;
+    }
+    
+    // For category menu items
+    const currentFilter = {
+      category: [getCurrentMenuItem.id],
+    };
+    
     sessionStorage.setItem("filters", JSON.stringify(currentFilter));
 
-    location.pathname.includes("listing") && currentFilter !== null
-      ? setSearchParams(
-          new URLSearchParams(`?category=${getCurrentMenuItem.id}`)
-        )
-      : navigate(getCurrentMenuItem.path);
+    if (location.pathname.includes("listing")) {
+      setSearchParams(new URLSearchParams(`?category=${getCurrentMenuItem.id}`));
+    } else {
+      navigate(getCurrentMenuItem.path);
+    }
   }
 
   return (
@@ -79,8 +89,6 @@ function HeaderRightContent() {
     dispatch(fetchCartItems(user?.id));
   }, [dispatch]);
 
-  console.log(cartItems, "sangam");
-
   return (
     <div className="flex lg:items-center lg:flex-row flex-col gap-4">
       <Sheet open={openCartSheet} onOpenChange={() => setOpenCartSheet(false)}>
@@ -108,21 +116,29 @@ function HeaderRightContent() {
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Avatar className="bg-black">
+          <Avatar className="bg-black cursor-pointer hover:opacity-80 transition-opacity">
             <AvatarFallback className="bg-black text-white font-extrabold">
-              {user?.userName[0].toUpperCase()}
+              {user?.userName?.[0].toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
         </DropdownMenuTrigger>
-        <DropdownMenuContent side="right" className="w-56">
-          <DropdownMenuLabel>Logged in as {user?.userName}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => navigate("/shop/account")}>
+        <DropdownMenuContent align="end" sideOffset={8} className="w-56 bg-white shadow-lg border border-gray-200 rounded-md">
+          <DropdownMenuLabel className="py-2 px-3 text-sm font-medium text-gray-700">
+            Logged in as <span className="font-bold">{user?.userName}</span>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator className="bg-gray-200" />
+          <DropdownMenuItem 
+            onClick={() => navigate("/shop/account")}
+            className="py-2 px-3 cursor-pointer hover:bg-gray-100"
+          >
             <UserCog className="mr-2 h-4 w-4" />
             Account
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleLogout}>
+          <DropdownMenuSeparator className="bg-gray-200" />
+          <DropdownMenuItem 
+            onClick={handleLogout}
+            className="py-2 px-3 cursor-pointer hover:bg-gray-100 text-red-600 hover:text-red-700"
+          >
             <LogOut className="mr-2 h-4 w-4" />
             Logout
           </DropdownMenuItem>
@@ -140,7 +156,7 @@ function ShoppingHeader() {
       <div className="flex h-16 items-center justify-between px-4 md:px-6">
         <Link to="/shop/home" className="flex items-center gap-2">
           <HousePlug className="h-6 w-6" />
-          <span className="font-bold">Ecommerce</span>
+          <span className="font-bold">ShopZone</span>
         </Link>
         <Sheet>
           <SheetTrigger asChild>
@@ -149,7 +165,7 @@ function ShoppingHeader() {
               <span className="sr-only">Toggle header menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-full max-w-xs">
+          <SheetContent side="left" className="w-full max-w-xs bg-white">
             <MenuItems />
             <HeaderRightContent />
           </SheetContent>

@@ -9,16 +9,22 @@ function AdminDashboard() {
   const [uploadedImageUrl, setUploadedImageUrl] = useState("");
   const [imageLoadingState, setImageLoadingState] = useState(false);
   const dispatch = useDispatch();
-  const { featureImageList } = useSelector((state) => state.commonFeature);
-
-  console.log(uploadedImageUrl, "uploadedImageUrl");
+  const { featureImageList, isLoading } = useSelector((state) => state.commonFeature);
 
   function handleUploadFeatureImage() {
+    // Add validation to prevent empty uploads
+    if (!uploadedImageUrl || uploadedImageUrl.trim() === "") {
+      console.warn("Cannot upload empty image URL");
+      return;
+    }
+
     dispatch(addFeatureImage(uploadedImageUrl)).then((data) => {
       if (data?.payload?.success) {
         dispatch(getFeatureImages());
         setImageFile(null);
         setUploadedImageUrl("");
+      } else {
+        console.error("Error uploading feature image:", data?.error);
       }
     });
   }
@@ -27,7 +33,15 @@ function AdminDashboard() {
     dispatch(getFeatureImages());
   }, [dispatch]);
 
-  console.log(featureImageList, "featureImageList");
+  // Debug logging
+  useEffect(() => {
+    console.log("Feature Image List:", featureImageList);
+  }, [featureImageList]);
+
+  // Filter out any empty or invalid images before displaying
+  const validFeatureImages = featureImageList?.filter(
+    item => item?.image && item.image.trim() !== ""
+  );
 
   return (
     <div>
@@ -39,22 +53,37 @@ function AdminDashboard() {
         setImageLoadingState={setImageLoadingState}
         imageLoadingState={imageLoadingState}
         isCustomStyling={true}
-        // isEditMode={currentEditedId !== null}
       />
-      <Button onClick={handleUploadFeatureImage} className="mt-5 w-full">
-        Upload
+      
+      <Button 
+        onClick={handleUploadFeatureImage} 
+        className="mt-2 w-full bg-black text-white py-2 rounded-md font-medium hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={!uploadedImageUrl || imageLoadingState}
+      >
+        {imageLoadingState ? "Uploading..." : "Upload"}
       </Button>
+      
       <div className="flex flex-col gap-4 mt-5">
-        {featureImageList && featureImageList.length > 0
-          ? featureImageList.map((featureImgItem) => (
-              <div className="relative">
-                <img
-                  src={featureImgItem.image}
-                  className="w-full h-[300px] object-cover rounded-t-lg"
-                />
-              </div>
-            ))
-          : null}
+        {isLoading ? (
+          <p>Loading banners...</p>
+        ) : validFeatureImages?.length > 0 ? (
+          validFeatureImages.map((featureImgItem) => (
+            <div key={featureImgItem._id} className="relative">
+              <img
+                src={featureImgItem.image}
+                className="w-full h-[300px] object-cover rounded-t-lg"
+                alt="Feature banner"
+                onError={(e) => {
+                  console.error("Image failed to load:", featureImgItem.image);
+                  e.target.onerror = null;
+                  e.target.src = "https://via.placeholder.com/800x300?text=Image+Load+Error";
+                }}
+              />
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-500">No banners uploaded yet</p>
+        )}
       </div>
     </div>
   );

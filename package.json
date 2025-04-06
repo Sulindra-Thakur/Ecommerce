@@ -1,0 +1,32 @@
+{
+  "name": "mern-ecommerce-2024",
+  "version": "1.0.0",
+  "description": "MERN Stack E-commerce Platform with AI Recommendations",
+  "main": "index.js",
+  "scripts": {
+    "install-client": "cd client && npm install",
+    "install-server": "cd server && npm install",
+    "install": "npm run install-client && npm run install-server",
+    "build-client": "cd client && npm run build",
+    "server": "cd server && npm run start",
+    "client": "cd client && npm run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "start": "cd server && npm run start",
+    "build": "npm run build-client",
+    "heroku-postbuild": "npm run install-client && npm run build-client"
+  },
+  "keywords": [
+    "mern",
+    "ecommerce",
+    "ai",
+    "recommendations"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+} 
