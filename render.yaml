@@ -13,3 +13,5 @@ services:
         sync: false
       - key: JWT_SECRET
         sync: false
+      - key: FRONTEND_URL
+        value: https://mern-ecommerce-client-1sz4.onrender.com

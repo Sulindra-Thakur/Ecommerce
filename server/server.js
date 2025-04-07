@@ -32,9 +32,26 @@ mongoose
 const app = express();
 const PORT = process.env.PORT || 5002;
 
+// Define allowed origins
+const allowedOrigins = [
+  "http://localhost:5173", 
+  "http://localhost:5174", 
+  "https://mern-ecommerce-client-1sz4.onrender.com",
+  process.env.FRONTEND_URL
+].filter(Boolean); // Remove any undefined values
+
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174", "https://mern-ecommerce-client-1sz4.onrender.com"],
+    origin: function(origin, callback) {
+      // Allow requests with no origin (like mobile apps, curl requests)
+      if(!origin) return callback(null, true);
+      
+      if(allowedOrigins.indexOf(origin) !== -1 || !origin) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ["GET", "POST", "DELETE", "PUT"],
     allowedHeaders: [
       "Content-Type",

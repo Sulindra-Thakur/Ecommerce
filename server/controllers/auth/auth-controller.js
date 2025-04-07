@@ -68,7 +68,11 @@ const loginUser = async (req, res) => {
       { expiresIn: "60m" }
     );
 
-    res.cookie("token", token, { httpOnly: true, secure: false }).json({
+    res.cookie("token", token, { 
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === 'production', 
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    }).json({
       success: true,
       message: "Logged in successfully",
       user: {
@@ -88,12 +92,23 @@ const loginUser = async (req, res) => {
 };
 
 //logout
-
-const logoutUser = (req, res) => {
-  res.clearCookie("token").json({
-    success: true,
-    message: "Logged out successfully!",
-  });
+const logoutUser = async (req, res) => {
+  try {
+    res.clearCookie("token", { 
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === 'production', 
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    }).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({
+      success: false,
+      message: "Some error occured",
+    });
+  }
 };
 
 //auth middleware
