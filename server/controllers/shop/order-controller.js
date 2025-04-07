@@ -21,10 +21,8 @@ const createOrder = async (req, res) => {
       cartId,
     } = req.body;
 
-    // Get the client's host from request headers, fallback to default if not available
-    const clientHost = req.headers.origin || (process.env.NODE_ENV === 'production' 
-      ? `https://${req.headers.host}` 
-      : 'http://localhost:5174');
+    // Get clientHost dynamically - works for both dev and prod
+    const clientHost = req.headers.origin || 'http://localhost:5174';
 
     const create_payment_json = {
       intent: "sale",
@@ -32,8 +30,8 @@ const createOrder = async (req, res) => {
         payment_method: "paypal",
       },
       redirect_urls: {
-        return_url: `${clientHost}/payment/success?orderId=${newOrder._id}`,
-        cancel_url: `${clientHost}/payment/cancel`,
+        return_url: `${clientHost}/shop/paypal-return`,
+        cancel_url: `${clientHost}/shop/paypal-cancel`,
       },
       transactions: [
         {
