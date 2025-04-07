@@ -1,5 +1,6 @@
 // API configuration
-export const API_BASE_URL = 'http://localhost:5002';
+// In client/src/lib/api.js or similar
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5002';
 
 // Helper function to build API URLs
 export const buildApiUrl = (path) => `${API_BASE_URL}${path}`;
