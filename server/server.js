@@ -8,7 +8,6 @@ const path = require("path");
 // Load environment variables
 dotenv.config();
 
-// Import routes
 const authRouter = require("./routes/auth/auth-routes");
 const adminProductsRouter = require("./routes/admin/products-routes");
 const adminOrderRouter = require("./routes/admin/order-routes");
@@ -20,41 +19,46 @@ const shopOrderRouter = require("./routes/shop/order-routes");
 const shopSearchRouter = require("./routes/shop/search-routes");
 const shopReviewRouter = require("./routes/shop/review-routes");
 const shopDiscountRouter = require("./routes/shop/discount-routes");
-const shopRecommendationRouter = require("./routes/shop/recommendation-routes");
 
 const commonFeatureRouter = require("./routes/common/feature-routes");
 
-// Connect to MongoDB
+//create a database connection -> u can also
+//create a separate file for this and then import/use that file here
+
 mongoose
-  .connect(process.env.MONGODB_URI)
+  .connect(process.env.MONGODB_URI || "mongodb+srv://sonvishalspy:ign9kUJiSimai938@cluster0.cbkxl.mongodb.net/")
   .then(() => console.log("MongoDB connected"))
-  .catch((error) => console.log("MongoDB connection error:", error));
+  .catch((error) => console.log(error));
 
 const app = express();
 const PORT = process.env.PORT || 5002;
 
 // Configure CORS
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',') 
-  : ["http://localhost:5173", "http://localhost:5174"];
+const allowedOrigins = [
+  "http://localhost:5173", 
+  "http://localhost:5174",
+  // Add your Render deployed frontend URL when available
+  "https://mern-ecommerce-2024.onrender.com",
+  "https://mern-ecommerce-frontend.onrender.com"
+];
 
 app.use(
   cors({
     origin: function(origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if(!origin) return callback(null, true);
+      // Allow requests with no origin (like mobile apps, curl requests)
+      if (!origin) return callback(null, true);
       
-      if(allowedOrigins.indexOf(origin) === -1) {
-        const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-        return callback(new Error(msg), false);
+      if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
       }
-      return callback(null, true);
     },
     methods: ["GET", "POST", "DELETE", "PUT"],
     allowedHeaders: [
       "Content-Type",
       "Authorization",
-      "Cache-Control", 
+      "Cache-Control",
       "Expires",
       "Pragma",
     ],
@@ -64,13 +68,6 @@ app.use(
 
 app.use(cookieParser());
 app.use(express.json());
-
-// Server status check endpoint
-app.get('/api/status', (req, res) => {
-  res.status(200).json({ status: 'online', environment: process.env.NODE_ENV });
-});
-
-// API Routes
 app.use("/api/auth", authRouter);
 app.use("/api/admin/products", adminProductsRouter);
 app.use("/api/admin/orders", adminOrderRouter);
@@ -82,31 +79,26 @@ app.use("/api/shop/order", shopOrderRouter);
 app.use("/api/shop/search", shopSearchRouter);
 app.use("/api/shop/review", shopReviewRouter);
 app.use("/api/shop/discount", shopDiscountRouter);
-app.use("/api/shop/recommendation", shopRecommendationRouter);
 
 app.use("/api/common/feature", commonFeatureRouter);
 
-// Serve static files in production
+// Serve static files from the React app in production
 if (process.env.NODE_ENV === 'production') {
-  // Serve static files from the React app
-  const clientBuildPath = path.join(__dirname, '../client/dist');
+  // Set static folder
+  const clientBuildPath = path.resolve(__dirname, '../client/dist');
   app.use(express.static(clientBuildPath));
 
-  // Handle React routing, return all non-API requests to React app
+  // Handle any routes not handled by API - serve index.html
   app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api/')) {
-      res.sendFile(path.join(clientBuildPath, 'index.html'));
+    // Skip API routes
+    if (req.url.startsWith('/api/')) {
+      return 'next';
     }
+    res.sendFile(path.resolve(clientBuildPath, 'index.html'));
   });
 }
 
-// Start server with improved error handling
-const server = app.listen(PORT, () => console.log(`Server is now running on port ${PORT}`))
-  .on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-      console.error(`Port ${PORT} is already in use. Please close other instances or use a different port.`);
-      process.exit(1);
-    } else {
-      console.error('Server error:', err);
-    }
-  });
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+});
