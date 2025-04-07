@@ -34,7 +34,7 @@ const PORT = process.env.PORT || 5002;
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174", "https://your-frontend-name.onrender.com"],
+    origin: ["http://localhost:5173", "http://localhost:5174", "https://mern-ecommerce-client-1sz4.onrender.com"],
     methods: ["GET", "POST", "DELETE", "PUT"],
     allowedHeaders: [
       "Content-Type",
