@@ -164,7 +164,7 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
 
   return (
     <Dialog open={open} onOpenChange={handleDialogClose}>
-      <DialogContent className="bg-white overflow-y-auto sm:p-6 max-w-[90vw] sm:max-w-[80vw] lg:max-w-[70vw]">
+      <DialogContent className="bg-white overflow-y-auto sm:p-6 max-w-[90vw] sm:max-w-[80vw] lg:max-w-[70vw] max-h-[90vh]">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="relative overflow-hidden rounded-lg">
             <img
@@ -244,7 +244,7 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
             <Separator />
             <div className="max-h-[300px] overflow-auto">
               <h2 className="text-xl font-bold mb-4">Reviews</h2>
-              <div className="grid gap-6">
+              <div className="grid gap-6 max-h-[300px] overflow-y-auto pr-4 custom-scrollbar">
                 {reviews && reviews.length > 0 ? (
                   reviews.map((reviewItem) => (
                     <div className="flex gap-4">
