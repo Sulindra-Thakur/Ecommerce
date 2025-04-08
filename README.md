@@ -89,6 +89,3 @@ The weather-based discount system is implemented using:
   - External weather API integration
   - Discount calculation algorithms based on weather conditions
   - Product model with seasonal attributes
-
-## License
-MIT 
