@@ -1,3 +1,7 @@
+GROUP PROJECT (MINOR PROJECT)
+
+
+
 # MERN E-Commerce with Weather-Based Smart Discounts
 
 A full-featured e-commerce platform built with the MERN stack (MongoDB, Express, React, Node.js) that includes a unique weather-based smart discount system.
