@@ -1,7 +1,7 @@
-GROUP PROJECT (MINOR PROJECT)
+https://mern-ecommerce-client-1sz4.onrender.com (THIS IS OUR FULL STACK LINK)
 
-
-
+      GROUP PROJECT(MINOR PROJECT)
+      IN THIS GROUP WE ARE 4 MEMBER
 # MERN E-Commerce with Weather-Based Smart Discounts
 
 A full-featured e-commerce platform built with the MERN stack (MongoDB, Express, React, Node.js) that includes a unique weather-based smart discount system.
